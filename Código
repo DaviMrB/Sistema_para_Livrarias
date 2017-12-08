@@ -1,0 +1,139 @@
+from tkinter import *
+import sqlite3
+
+ttitulo = 'Minha Biblioteca'
+background = 'Black'
+cor = 'Yellow'
+
+#deletar do banco de dados
+def Delete():
+    # deletando e salvando que foi deletado
+    cursor.execute('DELETE FROM dados WHERE nome = ? ', (pesquisa_confirmada,))
+    connection.commit()
+    #apagando labels
+    nome_label['fg'] = 'black'
+    autor_label['fg'] = 'black'
+    serie_label['fg'] = 'black'
+    sinopse_label['fg'] = 'black'
+
+#Função para Adicionar
+def adicionando():
+    #Pegando as informações
+    nome = nome_add.get().lower()
+    autor = autor_add.get().lower()
+    serie = serie_add.get().lower()
+    sinopse = sinopse_add.get().lower()
+
+    #colocando no Banco de dados
+    cursor.execute("INSERT INTO dados VALUES(?,?,?,?)", (nome, autor, serie, sinopse))
+    connection.commit()
+    add.destroy()
+
+#Função para confirmar a pesquisa
+def Confirmar():
+    global pesquisa_confirmada, lista_livros, nome_label, autor_label, serie_label, sinopse_label
+
+    #pegando o que a pessoa digitou
+    pesquisa_confirmada = pesquisa.get()
+    pesquisa_confirmada = pesquisa_confirmada.lower()
+
+    busca = 'SELECT * FROM dados WHERE nome = ?'
+
+    #pesquisas
+    if pesquisa_confirmada == 'add':
+        Janela_add()
+    else:
+       #Esse for ve o que vc digitou e pesquisa isso no Banco de dados
+       for lista_livros in cursor.execute(busca, (pesquisa_confirmada,)):
+
+           #agr ele impre na tela cada parte da tabela
+           nome_label = Label(janela, text='Nome: ' + lista_livros[0], background=background, fg=cor, font='Verdana 16')
+           nome_label.place(x=50, y=180)
+
+           autor_label = Label(janela, text='Autor: ' + lista_livros[1], background=background, fg=cor, font='Verdana 16')
+           autor_label.place(x=50, y=220)
+
+           serie_label = Label(janela, text='Série: ' + lista_livros[2], background=background, fg=cor, font='Verdana 16')
+           serie_label.place(x=50, y=260)
+
+           sinopse_label = Label(janela, text='Sinopse: ' + lista_livros[3], background=background, fg=cor, font='Verdana 16')
+           sinopse_label.place(x=50, y=300)
+
+           # caso tenha digitado alguma informação errada e deseja corrigir
+           deletar = Button(janela, text='Del', background=background, fg=cor, font='Verdana 16', command=Delete)
+           deletar.place(x=490, y=550)
+
+#Função abrir nova janela para add
+def Janela_add():
+    global  nome_add, autor_add, serie_add, sinopse_add, add
+
+    #Criando a pagina de add
+    add = Tk()
+    add.title(ttitulo)
+    add.configure(background=background)
+
+    #titulo do adcicione
+    titulo = Label(add, text='Adicione', background=background, fg=cor, font='Verdana 25')
+
+    #Labels para adicionar os nome, autor, serie, sinopse dos livros.
+    nome = Label(add, text='Nome:', background=background, fg=cor, font='Verdana 13')
+    nome_add = Entry(add, width=30)
+
+    autor = Label(add, text='Autor:', background=background,fg=cor,font='Verdana 13')
+    autor_add = Entry(add, width=30)
+
+    serie = Label(add,text='Série:', background=background, fg=cor,font='Verdana 13')
+    serie_add = Entry(add, width=30)
+
+    sinopse = Label(add,text='Sinopse:', background=background, fg=cor, font='Verdana 13')
+    sinopse_texto = Text(add, width=30, height=10)
+    sinopse_add = Entry(add, width=5)
+
+    botao_add= Button(add, text='ADD+', background=background, fg=cor, font='Verdana 13', width=5, height=2, command=adicionando)
+
+    #Localização desses Labels
+    nome.place(x=50, y=100)
+    nome_add.place(x=120, y=105)
+
+    autor.place(x=50, y=150)
+    autor_add.place(x=120, y=155)
+
+    serie.place(x=50, y=200)
+    serie_add.place(x=120, y=205)
+
+    sinopse.place(x=50, y=250)
+    sinopse_texto.place(x=130, y=255)
+    sinopse_add.place(x=350, y=450)
+
+    botao_add.place(x=400, y=430)
+
+    titulo.place(x=170, y=20)
+
+    add.geometry('500x500+250+120')
+    add.mainloop()
+
+#criando janelas
+janela = Tk()
+janela.title(ttitulo)
+janela.configure(background=background)
+
+#criando Banco de dados
+connection = sqlite3.connect('biblioteca.db')
+cursor = connection.cursor()
+cursor.execute('CREATE TABLE IF NOT EXISTS dados(nome text, autor text, serie text, sinopse text)')
+
+#fazer a pesquisa
+pesquisa = Entry(janela, width=50)
+confirmacao_pesquisa = Button(janela, width=10, height=2, text='OK', fg=cor, background=background, command=Confirmar)
+
+#titulo da primeira pagina
+titulo = Label(janela, text=ttitulo,font='Verdana 26',fg='yellow',background='black')
+
+#localização
+pesquisa.place(x=50, y=120)
+confirmacao_pesquisa.place(x=380, y=110)
+titulo.place(x=140, y=20)
+
+#dimensão da tela e loop
+janela.geometry('550x600+400+50')
+janela.mainloop()
